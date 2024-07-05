@@ -1,0 +1,60 @@
+import pickle
+import pandas as pd
+import numpy as np
+
+# Load the saved KNN model and scaler
+with open('knn_model.pickle', 'rb') as f:
+    knn_new = pickle.load(f)
+
+with open('scaler.pickle', 'rb') as f:
+    scaler_new = pickle.load(f)
+
+# Read and prepare new data
+new_df = pd.read_csv("newEmployee Data.csv")
+print(new_df)
+
+print(f"Number of rows in the new data: {len(new_df)}")
+
+# Encode the 'Gender' column
+gender_encoded_new = pd.get_dummies(new_df['Gender'], drop_first=True)
+print(gender_encoded_new)
+
+# Concatenate the encoded column to the new data
+df_new_2 = pd.concat([new_df, gender_encoded_new], axis=1)
+print(df_new_2)
+
+# Prepare the feature matrix
+x_new = df_new_2[['Male', 'Satisfaction', 'Salary', 'Home-Office', 'Department']].to_numpy()
+print(x_new)
+
+# Scale the features using the loaded scaler
+x_new_scale2 = scaler_new.transform(x_new)
+print(x_new_scale2)
+
+# Predict attrition for the new data
+y_new_pred = knn_new.predict(x_new_scale2)
+print(y_new_pred)
+
+# Add the prediction results to the dataframe
+df_new_2['will_Attrition'] = y_new_pred
+print(df_new_2)
+
+# Save the new dataframe with predictions to a CSV file
+df_new_2.to_csv("model_predictions.csv", index=False)
+
+# Predict attrition for a single new row
+# Define the new row values (ensure it matches the order and number of features)
+row_values = [1, 32, 40000, 5000, 3]  # Example values, adjust as needed
+
+# Reshape it to a 2D NumPy array
+x_new_single = np.array(row_values).reshape(1, -1)
+print(x_new_single)
+
+# Scale the new row using the loaded scaler
+x_new_single_scale = scaler_new.transform(x_new_single)
+print(x_new_single_scale)
+
+# Predict attrition for the single new row
+y_new_single_pred = knn_new.predict(x_new_single_scale)
+prediction = str(y_new_single_pred[0])
+print("Attrition? " + prediction)
